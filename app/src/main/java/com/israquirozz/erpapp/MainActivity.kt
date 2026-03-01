@@ -37,6 +37,32 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+fun validateName(name: String): String? {
+    return when {
+        name.isBlank() -> "Name is required"
+        name.length < 3 -> "Name must be at least 3 characters"
+        else -> null
+    }
+}
+
+fun validatePhone(phone: String): String? {
+    return when {
+        phone.isBlank() -> "Phone is required"
+        !phone.all { it.isDigit() } -> "Phone must contain only numbers"
+        phone.length < 9 -> "Phone must be at least 9 digits"
+        else -> null
+    }
+}
+
+fun validateEmail(email: String): String? {
+    return when {
+        email.isBlank() -> "Email is required"
+        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
+            "Invalid email format"
+        else -> null
+    }
+}
+
 @Composable
 fun SupplierScreen() {
 
@@ -292,43 +318,88 @@ fun CreateSupplierDialog(
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(onClick = {
-                val newSupplier = SupplierCreateRequest(
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    id_address = 1 // ⚠ temporal fijo
-                )
-                onCreate(newSupplier)
+
+                nameError = validateName(name)
+                phoneError = validatePhone(phone)
+                emailError = validateEmail(email)
+
+                if (nameError == null &&
+                    phoneError == null &&
+                    emailError == null
+                ) {
+                    val newSupplier = SupplierCreateRequest(
+                        name = name,
+                        phone = phone,
+                        email = email,
+                        id_address = 1
+                    )
+                    onCreate(newSupplier)
+                }
+
             }) {
-                Text("Crear")
+                Text("Create")
             }
         },
         dismissButton = {
             Button(onClick = onDismiss) {
-                Text("Cancelar")
+                Text("Cancel")
             }
         },
-        title = { Text("Nuevo Proveedor") },
+        title = { Text("New Supplier") },
         text = {
             Column {
+
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") }
+                    onValueChange = {
+                        name = it
+                        nameError = validateName(it)
+                    },
+                    label = { Text("Name") },
+                    isError = nameError != null,
+                    supportingText = {
+                        nameError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
+
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Teléfono") }
+                    onValueChange = {
+                        phone = it
+                        phoneError = validatePhone(it)
+                    },
+                    label = { Text("Phone") },
+                    isError = phoneError != null,
+                    supportingText = {
+                        phoneError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
+
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") }
+                    onValueChange = {
+                        email = it
+                        emailError = validateEmail(it)
+                    },
+                    label = { Text("Email") },
+                    isError = emailError != null,
+                    supportingText = {
+                        emailError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
             }
         }
@@ -345,20 +416,34 @@ fun EditSupplierDialog(
     var name by remember { mutableStateOf(supplier.name) }
     var phone by remember { mutableStateOf(supplier.phone) }
     var email by remember { mutableStateOf(supplier.email) }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(onClick = {
-                val updated = SupplierCreateRequest(
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    id_address = supplier.id_address
-                )
-                onUpdate(updated)
+
+                nameError = validateName(name)
+                phoneError = validatePhone(phone)
+                emailError = validateEmail(email)
+
+                if (nameError == null &&
+                    phoneError == null &&
+                    emailError == null
+                ) {
+                    val updated = SupplierCreateRequest(
+                        name = name,
+                        phone = phone,
+                        email = email,
+                        id_address = supplier.id_address
+                    )
+                    onUpdate(updated)
+                }
+
             }) {
-                Text("Actualizar")
+                Text("Update")
             }
         },
         dismissButton = {
@@ -371,18 +456,45 @@ fun EditSupplierDialog(
             Column {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") }
+                    onValueChange = {
+                        name = it
+                        nameError = validateName(it)
+                    },
+                    label = { Text("Name") },
+                    isError = nameError != null,
+                    supportingText = {
+                        nameError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Teléfono") }
+                    onValueChange = {
+                        phone = it
+                        phoneError = validatePhone(it)
+                    },
+                    label = { Text("Phone") },
+                    isError = phoneError != null,
+                    supportingText = {
+                        phoneError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") }
+                    onValueChange = {
+                        email = it
+                        emailError = validateEmail(it)
+                    },
+                    label = { Text("Email") },
+                    isError = emailError != null,
+                    supportingText = {
+                        emailError?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 )
             }
         }
